@@ -1,0 +1,66 @@
+# Python / FastAPI
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+pip-wheel-metadata/
+.pytest_cache/
+.mypy_cache/
+.coverage*
+htmlcov/
+.cache/
+.ipynb_checkpoints/
+
+# Venv
+.venv/
+venv/
+env/
+ENV/
+
+# Editors
+.vscode/
+.idea/
+.vs/
+*.suo
+*.user
+*.code-workspace
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+*.lnk
+~$*
+
+# Logs & temp
+*.log
+logs/
+tmp/
+temp/
+temp_*
+*.tmp
+
+# Generated images
+output_*.jpg
+output_*.png
+*_bgblur.jpg
+*_beauty.jpg
+*_morph.jpg
+*_sticker_*.png
+
+# rembg cache
+.rembg/
+
+# Keep deploy files
+!requirements.txt
+!Procfile
+!runtime.txt
+
+# Keep assets
+!app/stickers/**
+!app/lut_filters/**
