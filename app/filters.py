@@ -5,8 +5,15 @@ from typing import Optional
 from rembg import remove, new_session
 from .stickers_utils import place_sticker
 
-# rembg oturumu (tek sefer)
-SESSION = new_session()
+# ---- rembg: lazy singleton + küçük model (u2netp ~4.7MB) ----
+_SESSION = None
+
+def _get_rembg_session():
+    global _SESSION
+    if _SESSION is None:
+        # Daha hafif model: u2netp (OOM ve cold-start riskini ciddi düşürür)
+        _SESSION = new_session("u2netp")
+    return _SESSION
 
 # Büyük görsellerde pik RAM'i düşürmek için uzun kenarı sınırla
 MAX_SIDE = int(os.getenv("MAX_IMAGE_SIDE", "2048"))
@@ -52,7 +59,9 @@ def apply_background_blur(image_path: str, blur_strength: float = 0.5) -> str:
     ok, enc = cv2.imencode(".png", bgr)  # rembg'ye bgr'nin aynısını ver
     if not ok:
         raise ValueError("apply_background_blur: encode failed before rembg")
-    rgba_bytes = remove(enc.tobytes(), session=SESSION)
+
+    session = _get_rembg_session()
+    rgba_bytes = remove(enc.tobytes(), session=session)
     rgba = cv2.imdecode(np.frombuffer(rgba_bytes, np.uint8), cv2.IMREAD_UNCHANGED)
 
     k = max(3, int(25 * max(0.0, min(1.0, blur_strength))) | 1)
