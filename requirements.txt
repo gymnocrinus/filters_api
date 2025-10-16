@@ -1,20 +1,30 @@
+# --- API ---
 fastapi==0.119.0
 uvicorn[standard]==0.37.0
+pydantic==2.12.2
+starlette==0.48.0
 python-multipart==0.0.20
+python-dotenv==1.1.1
 
-# Çekirdek bilimsel stack (NumPy 1.x hattı)
+# --- Çekirdek bilimsel stack (NumPy 1.x) ---
 numpy==1.26.4
-pillow==12.0.0
+Pillow==10.3.0
 
-# OpenCV: NumPy 1.x ile uyumlu wheel
-opencv-python-headless==4.9.0.80
+# --- OpenCV: NumPy 1.x ile uyumlu wheel ---
+opencv-contrib-python-headless==4.9.0.80
 
-# Media ve ML kütüphaneleri
+# --- Bilimsel / Görüntü ---
+scipy==1.11.4
+scikit-image==0.22.0
+protobuf==4.25.3
+
+# --- rembg + ONNX Runtime (NumPy 1.x ile sorunsuz) ---
+onnxruntime==1.17.3
+rembg==2.0.67
+
+# --- MediaPipe ve arkadaşları (NumPy 1.x ile uyumlu kombinasyon) ---
 mediapipe==0.10.21
 jax==0.7.1
 jaxlib==0.7.1
-ml-dtypes==0.5.3
-
-# rembg ve motoru
-rembg==2.0.67
-onnxruntime==1.17.3
+ml-dtypes==0.5.0
+opt-einsum==3.4.0
