@@ -1,9 +1,28 @@
-fastapi
-uvicorn[standard]
-pillow
-opencv-python-headless
-mediapipe
-rembg
-numpy
-python-multipart
+# --- API ---
+fastapi==0.119.0
+uvicorn[standard]==0.37.0
+pydantic==2.12.2
+starlette==0.48.0
+python-multipart==0.0.20
+python-dotenv==1.1.1
+
+# --- Görüntü / CV ---
+# Tek bir OpenCV paketi kullan: headless + contrib modülleri
+opencv-contrib-python-headless==4.12.0.88
+Pillow==10.3.0
+
+# --- ML yığını: NumPy 1.x ile uyumlu pin'ler ---
+numpy==1.26.4
+scipy==1.11.4
+scikit-image==0.22.0
+protobuf<5,>=4.25.3
+
+# rembg + ONNX Runtime (NumPy 1.x ile sorunsuz)
 onnxruntime==1.17.3
+rembg==2.0.67
+
+# MediaPipe ve çözdüğü bağımlılıklar NumPy 1.26 hattıyla uyumlu
+mediapipe==0.10.21
+jax==0.7.1
+ml-dtypes==0.5.0
+opt-einsum==3.4.0
