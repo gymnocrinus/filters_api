@@ -1,51 +1,82 @@
+import os
 import cv2
 import numpy as np
-from .face_mesh_utils import get_face_landmarks, landmark_to_pixel
+from .face_mesh_utils import get_face_landmarks
 
-def _overlay_with_alpha(base_bgr, sticker_rgba, x, y, w, h):
+# Sticker PNG cache
+_STICKER_CACHE = {}
+_DEFAULT_DIRS = [
+    os.getenv("STICKERS_DIR") or "",
+    "app/stickers",
+    "stickers",
+    "assets/stickers",
+]
+
+def _load_sticker_rgba(sticker_name: str):
+    """sticker_name: 'crown' -> crown.png; returns RGBA or None"""
+    if sticker_name in _STICKER_CACHE:
+        return _STICKER_CACHE[sticker_name]
+    file_name = f"{sticker_name}.png"
+    for d in _DEFAULT_DIRS:
+        if not d:
+            continue
+        path = os.path.join(d, file_name)
+        if os.path.exists(path):
+            rgba = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+            if rgba is not None and rgba.ndim == 3 and rgba.shape[2] in (3, 4):
+                _STICKER_CACHE[sticker_name] = rgba
+                return rgba
+    return None
+
+def _overlay_roi_alpha(base_bgr: np.ndarray, sticker_rgba: np.ndarray, x: int, y: int, w: int, h: int):
+    """ROI üzerinde alfa blend (ara dev tampon yok)."""
     st = cv2.resize(sticker_rgba, (w, h), interpolation=cv2.INTER_AREA)
     if st.shape[2] == 4:
-        alpha = st[:, :, 3] / 255.0
-        alpha = np.stack([alpha, alpha, alpha], axis=2)
         roi = base_bgr[y:y+h, x:x+w, :]
         rgb = st[:, :, :3]
-        blended = (alpha * rgb + (1 - alpha) * roi).astype(np.uint8)
+        alpha = (st[:, :, 3:4].astype(np.float32) / 255.0)
+        blended = (alpha * rgb.astype(np.float32) + (1.0 - alpha) * roi.astype(np.float32)).astype(np.uint8)
         base_bgr[y:y+h, x:x+w, :] = blended
     else:
         base_bgr[y:y+h, x:x+w, :] = st[:, :, :3]
     return base_bgr
 
-def place_sticker(image_path: str, sticker_path: str, anchor_idxs=(10, 338)):
-    img = cv2.imread(image_path, cv2.IMREAD_COLOR)
-    if img is None:
-        raise ValueError("Input image not readable.")
-    h, w = img.shape[:2]
+def _face_bbox(landmarks, w: int, h: int):
+    xs = [int(l.x * w) for l in landmarks]
+    ys = [int(l.y * h) for l in landmarks]
+    x1, y1 = max(0, min(xs)), max(0, min(ys))
+    x2, y2 = min(w - 1, max(xs)), min(h - 1, max(ys))
+    return x1, y1, x2, y2
 
-    # MediaPipe RGB ister
-    rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    lms = get_face_landmarks(rgb)
-    if not lms:
-        return img  # yüz bulunamazsa orijinali döndür
-
-    # Alın hizası için 10 ve 338 iyi anchor noktalarıdır
-    x1, y1 = landmark_to_pixel(lms[anchor_idxs[0]], w, h)
-    x2, y2 = landmark_to_pixel(lms[anchor_idxs[1]], w, h)
-    face_w = abs(x2 - x1)
-
-    st = cv2.imread(sticker_path, cv2.IMREAD_UNCHANGED)
+def place_sticker(img_bgr: np.ndarray, sticker_name: str = "crown") -> np.ndarray:
+    """Yüz landmark'larına göre sticker yerleştirir; BGR döner."""
+    h, w = img_bgr.shape[:2]
+    st = _load_sticker_rgba(sticker_name)
     if st is None:
-        raise ValueError(f"Sticker not found: {sticker_path}")
+        return img_bgr
 
+    rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
+    landmarks = get_face_landmarks(rgb)
+    if not landmarks:
+        return img_bgr
+
+    x1, y1, x2, y2 = _face_bbox(landmarks, w, h)
+    face_w = max(1, x2 - x1)
     sw = int(face_w * 1.5)
-    sh = int(sw * st.shape[0] / st.shape[1])
+    sh = max(1, int(sw * st.shape[0] / st.shape[1]))
 
     x = max(0, x1 - int(face_w * 0.25))
-    y = max(0, y1 - sh)
+    y = y1 - sh
 
-    # Taşmaları sınırla
-    if x + sw > w: sw = w - x
-    if y + sh > h: sh = h - y
+    if x < 0:
+        sw += x; x = 0
+    if y < 0:
+        sh += y; y = 0
+    if x + sw > w:
+        sw = w - x
+    if y + sh > h:
+        sh = h - y
     if sw <= 0 or sh <= 0:
-        return img
+        return img_bgr
 
-    return _overlay_with_alpha(img, st, x, y, sw, sh)
+    return _overlay_roi_alpha(img_bgr, st, x, y, sw, sh)

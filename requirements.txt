@@ -14,8 +14,7 @@ protobuf==4.25.3
 Pillow==10.3.0
 
 # --- OpenCV (rembg + mediapipe birlikte uyum için aynı sürüm) ---
-opencv-python-headless==4.9.0.80
-opencv-contrib-python==4.9.0.80
+opencv-contrib-python-headless==4.9.0.80
 
 # --- rembg + ONNX Runtime (NumPy 1.x ile uyumlu) ---
 onnxruntime==1.17.3
