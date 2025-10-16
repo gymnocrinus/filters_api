@@ -1,5 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from app.filters import (
     apply_beauty,
     apply_background_blur,
@@ -11,6 +11,18 @@ import shutil
 import os
 
 app = FastAPI(title="Render Advanced Filter API")
+
+
+# Root -> /docs redirection
+@app.get("/", include_in_schema=False)
+async def root():
+    return RedirectResponse(url="/docs")
+
+
+# Health check endpoint
+@app.get("/healthz", tags=["meta"])
+async def healthz():
+    return {"status": "ok"}
 
 def save_temp_file(file: UploadFile):
     path = f"temp_{file.filename}"
