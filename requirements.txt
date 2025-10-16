@@ -1,8 +1,9 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pillow
-opencv-python
+opencv-python-headless
 mediapipe
 rembg
 numpy
 python-multipart
+onnxruntime==1.17.3
